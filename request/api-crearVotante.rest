@@ -1,0 +1,11 @@
+POST http://localhost:3000/api/crearVotante
+Content-Type: application/json
+
+{
+  "Identificación": 51865234,
+  "Apellidos": "ARIAS RODRIGUEZ",
+  "Nombres": "MARIA CONSTANZA",
+  "Estamento": "Docente",
+  "Fecha": "2023-03-05",
+  "estado": 0
+ }
