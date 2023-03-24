@@ -9,7 +9,7 @@ const port = process.env.PORT || 3001;
 const ChosenModel = require('./models/ChosenModel')
 
 
-app.use(bodyParser.json({limit: '100kb'}));
+app.use(bodyParser.json({limit: '300kb'}));
 app.use(cors());
 app.use(express.json());
 
