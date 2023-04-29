@@ -10,7 +10,8 @@ const ChosenModelSchema = new Schema({
     first_name: String,
     last_name: String,
     ocupation: String,
-    donor_photo_base64 : String, 
+    donor_photo_base64 : String,
+    payId: String, 
     phone: {
         country:String,
         value:String,
