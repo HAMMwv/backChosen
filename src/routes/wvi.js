@@ -7,8 +7,9 @@ const mercadopago = require('mercadopago');
 const ChosenModel = require('../models/ChosenModel');
 const PayModel = require('../models/payModel');
 const ProductsModel = require('../models/ProducModel');
+const RegisterPayModel = require("../models/RegisterPayModel")
 
-mercadopago.configurations.setAccessToken("TEST-6786679189352218-092210-fddd03b205cadf771f954ef52eeb34be-265854976");
+mercadopago.configurations.setAccessToken("APP_USR-6786679189352218-092210-8c759ee3eabcbf2302092e88f0feeffe-265854976");
 
 /**
  * Registra el formulario de ingreso para los elegidos en la DB
@@ -118,6 +119,31 @@ router.post('/api/checkout/upload-pay-donor/:id', (req, res) => {
     
 })
 
+router.post('/api/checkout/add-pay-donor/:id', (req, res) => {
+    const idParams = req.params.id;
+    const registerPayData = req.body;
+    let data = {
+        id: registerPayData.id,
+        status: registerPayData.status,
+        status_detail: registerPayData.status_detail,
+        idParams : idParams,
+        date: new Date
+    }
+    const pay = new RegisterPayModel(data);
+    pay.save()
+    .then((WriteResult)=>{
+        let idPay = WriteResult.id
+        ChosenModel.updateOne({_id: idParams}, {payId: idPay})
+        .then(()=>{
+            res.status(201).send("Actualizacion Exitosa")
+        })
+        .catch((e)=>{
+            res.send("No se pudo ejecutar la actualizacion",e)
+        })
+    })      
+})
+
+
 
 router.get('/api/products', (req, res)=>{
     ProductsModel.find({})
@@ -169,10 +195,6 @@ let payment_data = {
     }
     };
     
-    console.log(payment_data)
-
-   
-
     mercadopago.payment.save(payment_data)
     .then(function(response) {
     res.status(response.status).json({
