@@ -3,8 +3,7 @@ const {
 } = require('express');
 const router = Router();
 
-const https = require('https');
-const querystring = require('querystring');
+
 
 
 const mercadopago = require('mercadopago');
@@ -12,6 +11,8 @@ const ChosenModel = require('../models/ChosenModel');
 const PayModel = require('../models/payModel');
 const ProductsModel = require('../models/ProducModel');
 const RegisterPayModel = require("../models/RegisterPayModel")
+const https = require('https');
+const querystring = require('querystring');
 
 mercadopago.configurations.setAccessToken("APP_USR-6786679189352218-092210-8c759ee3eabcbf2302092e88f0feeffe-265854976");
 
