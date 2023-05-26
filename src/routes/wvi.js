@@ -18,11 +18,11 @@ mercadopago.configurations.setAccessToken("APP_USR-6786679189352218-092210-8c759
 
 
 /**
- * Registro de informacion en hubSpot
- * @param {Object} data informacion de registro en plataforma chosen
+ * Registro de informacion en HubSpot para el formulario de deonacion
+ * @param {Object} data informacion de registro en plataforma chosen 
  * @param {String} status estado de la transaccion efectuada con MP
  */
-const registrarFrom = (data,status)=>{   
+const registerFrom = (data,status)=>{   
 
     // build the data object
     
@@ -75,6 +75,63 @@ const registrarFrom = (data,status)=>{
 
 }
 
+
+/**
+ * Registro de informacion en HubSpot para el formulario de pre transaccion
+ * @param {Object} data informacion de registro en plataforma chosen en el formulario de contacto
+ */
+ const registerPreTransactionFrom = (data)=>{   
+
+    // build the data object    
+    var postData = querystring.stringify({
+        'firstname': data.first_name,
+        'lastname': data.last_name,
+        'email': data.email,
+        'fecha_de_nacimiento':data.birthdate,  
+        'g_nero':data.gender,  
+        'phone': data.phone.value,
+        'adress': data.address_street,
+        'city': data.address_city,
+        'hs_context': JSON.stringify({
+            "hutk": '60c2ccdfe4892f0fa0593940b12c11123',
+            "ipAddress": '0.0.0.0',
+            "pageUrl": "https://elegido.worldvision.co/",
+            "pageName": "Elegido World Vision"
+        })
+    });
+    
+    // set the post options, changing out the HUB ID and FORM GUID variables.    
+    var options = {
+        hostname: 'forms.hubspot.com',
+        path: '/uploads/form/v2/2623910/3b2488ec-ddd5-42b3-8e6f-c4c5327f8eae',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Length': postData.length
+        }
+    }
+    
+    // set up the request    
+    var request = https.request(options, function(response){
+        console.log("Status: " + response.statusCode);
+        console.log("Headers: " + JSON.stringify(response.headers));
+        response.setEncoding('utf8');
+        response.on('data', function(chunk){
+            console.log('Body: ' + chunk)
+        });
+    });
+    
+    request.on('error', function(e){
+        console.log("Problem with request " + e.message)
+    });
+    
+    // post the data
+    
+    request.write(postData);
+    request.end();
+    
+ }
+
 /**
  * Registra el formulario de ingreso o contactForm para los elegidos en la DB
  * creacion elegido en la bd
@@ -86,6 +143,7 @@ router.post('/api/chosenRegister', (req, res) => {
             error: 'chosen is missing',
         });
     }
+    console.log(data)
     const chosen = new ChosenModel(req.body);
     chosen.save()
         .then((WriteResult) => {
@@ -99,6 +157,8 @@ router.post('/api/chosenRegister', (req, res) => {
         .catch((err) => {
             console.log(err);
         })
+
+    registerPreTransactionFrom(data); 
 })
 
 /**
@@ -225,7 +285,7 @@ router.post('/api/checkout/add-pay-donor/:id', (req, res) => {
         })
     })
 
-    registrarFrom(registerPayData.contactForm, registerPayData.transaction.status);
+    registerFrom(registerPayData.contactForm, registerPayData.transaction.status);
    
 })
 
@@ -248,7 +308,7 @@ router.get('/api/products', (req, res)=>{
 
 /**
  * decodifica las fotografias ingresando el id
- * chose es el objeto viejo
+ * 
  */
 router.get('/api/decobase64/:id', (req,res)=>{
     const idParams = req.params.id;
