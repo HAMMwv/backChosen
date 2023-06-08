@@ -14,7 +14,7 @@ const RegisterPayModel = require("../models/RegisterPayModel")
 const https = require('https');
 const querystring = require('querystring');
 
-mercadopago.configurations.setAccessToken("TEST-6786679189352218-092210-fddd03b205cadf771f954ef52eeb34be-265854976");
+mercadopago.configurations.setAccessToken("APP_USR-6786679189352218-092210-8c759ee3eabcbf2302092e88f0feeffe-265854976");
 
 
 /**
