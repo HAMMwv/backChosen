@@ -14,7 +14,7 @@ const RegisterPayModel = require("../models/RegisterPayModel")
 const https = require('https');
 const querystring = require('querystring');
 
-mercadopago.configurations.setAccessToken("APP_USR-6786679189352218-092210-8c759ee3eabcbf2302092e88f0feeffe-265854976");
+mercadopago.configurations.setAccessToken("TEST-6786679189352218-092210-fddd03b205cadf771f954ef52eeb34be-265854976");
 
 
 /**
@@ -206,7 +206,7 @@ router.post('/api/checkout/upload-pay-donor/:id', (req, res) => {
           exp_year: payData.card.exp_year,
           cvc: '',
           holder_name: payData.card.holder_name,
-          installments: payData.card.installments
+          installments: Number(payData.card.installments)
         },
         address: { 
             street: payData.address.street, 
@@ -355,6 +355,59 @@ router.post('/api/registerpay', (req, res) => {
     .catch(function(error) {
     console.error(error)
     });
+})
+
+
+router.post('/api/registerpayPSE', (req, res) => {  
+
+    let payment_data = {
+        transaction_amount: req.body.transaction_amount,
+        description: req.body.description,
+        payment_method_id: req.body.payment_method_id,
+        payer: {
+            entity_type: req.body.payer.entity_type,
+            email: req.body.payer.email,
+            identification: {
+                type: req.body.payer.identification.type,
+                number: req.body.payer.identification.number,
+            }
+        },
+        additional_info: {
+            ip_address: req.body.additional_info.ip_address,
+        },
+        transaction_details: {
+            financial_institution: req.body.transaction_details.financial_institution,
+        },
+        callback_url: req.body.callback_url,
+    };
+    
+
+    mercadopago.payment.save(payment_data)
+    .then(function(response) {      
+        res.status(response.status).json({
+            status: response.body.status,
+            status_detail: response.body.status_detail,
+            id: response.body.id,
+            external_resource_url:response.body.transaction_details.external_resource_url,
+            transaction_id:response.body.transaction_details.transaction_id,
+        });
+    })
+    .catch(function(error) {
+    console.error(error)
+    });
+})
+
+
+router.get('/api/payment_metods_pse',(req ,res)=>{
+    const paymentMethod = async() =>{
+        let response = await mercadopago.payment_methods.listAll();
+        let payment_methods = response.body;
+        let payment_methods_pse = payment_methods.find((metodo) => metodo.id == 'pse' );
+        let financial_institutions = payment_methods_pse.financial_institutions;
+        res.json(financial_institutions);
+    }
+    
+    paymentMethod()
 })
 
 
