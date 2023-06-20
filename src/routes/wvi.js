@@ -263,6 +263,7 @@ router.post('/api/checkout/add-pay-donor/:id', (req, res) => {
         },
         identification : registerPayData.identification,
         typeIdentification : registerPayData.typeIdentification,
+        payment_method_id : registerPayData.payment_method_id,
         transaction : {
             status : registerPayData.transaction.status,
             status_detail : registerPayData.transaction.status_detail,
@@ -393,7 +394,8 @@ router.post('/api/registerpayPSE', (req, res) => {
         });
     })
     .catch(function(error) {
-    console.error(error)
+        console.error(error)
+        res.json(error)
     });
 })
 

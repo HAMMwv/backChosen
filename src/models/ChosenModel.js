@@ -12,6 +12,10 @@ const ChosenModelSchema = new Schema({
     ocupation: String,
     donor_photo_base64 : String,
     payId: String, 
+    referral_code: String, 
+    identificationNumber: String, 
+    identificationType: String, 
+    date: String, 
     phone: {
         country:String,
         value:String,

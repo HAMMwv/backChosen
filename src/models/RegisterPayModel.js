@@ -13,6 +13,7 @@ const RegisterPayModelSchema = new Schema({
      },
      identification: String,
      typeIdentification: String,
+     payment_method_id: String,
      transaction: {
         id: Number,
         status: String,
