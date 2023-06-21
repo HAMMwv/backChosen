@@ -40,8 +40,7 @@ const registerFrom = (data,status)=>{
         })
     });
     
-    // set the post options, changing out the HUB ID and FORM GUID variables.
-    
+    // set the post options, changing out the HUB ID and FORM GUID variables.    
     var options = {
         hostname: 'forms.hubspot.com',
         path: '/uploads/form/v2/2623910/923f8e6d-fa8d-4d22-93d7-555f4923c2f4',
@@ -52,8 +51,7 @@ const registerFrom = (data,status)=>{
         }
     }
     
-    // set up the request
-    
+    // set up the request    
     var request = https.request(options, function(response){
         console.log("Status: " + response.statusCode);
         console.log("Headers: " + JSON.stringify(response.headers));
@@ -282,7 +280,7 @@ router.post('/api/checkout/add-pay-donor/:id', (req, res) => {
             res.status(201).send("Actualizacion Exitosa")
         })
         .catch((e)=>{
-            res.send("No se pudo ejecutar la actualizacion",e)
+            res.status(400).send(e)
         })
     })
 
