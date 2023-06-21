@@ -90,6 +90,8 @@ const registerFrom = (data,status)=>{
         'phone': data.phone.value,
         'adress': data.address_street,
         'city': data.address_city,
+        'co_tipo_de_documento': data.identificationType,
+        'n_mero_de_documento': data.identificationNumber,
         'hs_context': JSON.stringify({
             "hutk": '60c2ccdfe4892f0fa0593940b12c11123',
             "ipAddress": '0.0.0.0',
