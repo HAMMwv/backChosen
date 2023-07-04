@@ -73,7 +73,6 @@ const registerFrom = (data,status)=>{
 
 }
 
-
 /**
  * Registro de informacion en HubSpot para el formulario de pre transaccion
  * @param {Object} data informacion de registro en plataforma chosen en el formulario de contacto
@@ -189,8 +188,33 @@ router.post('/api/checkout/upload-photo-donor/:id', (req, res) => {
 })
 
 /**
+ * Actualizacion de estado de transaccion de pago
+ */
+router.post('/api/checkout/update-payment/:id', (req, res) => {
+    const idParams = req.params.id;
+    const data = req.body;
+    console.log(idParams)
+    if (!data) {
+        return res.status(400).json({
+            error: 'data is missing',
+        });
+    }
+    RegisterPayModel.find({
+        _id : idParams 
+        })
+        .then((WriteResult) => {
+            console.log(WriteResult)
+        })
+        .catch((err) => {
+            res.json({
+                err
+            });
+        })
+})
+
+/**
  * registro del formulario de pago sin registro en MP, tomando
- * el formulario inicial entregado por brasil
+ * el formulario inicial entregado por brasil ya no se usa
  */
 router.post('/api/checkout/upload-pay-donor/:id', (req, res) => {
     const idParams = req.params.id;
@@ -290,7 +314,6 @@ router.post('/api/checkout/add-pay-donor/:id', (req, res) => {
    
 })
 
-
 /**
  * Tipos de producto en el storage
  * requerido por el desarrollo original
@@ -306,7 +329,6 @@ router.get('/api/products', (req, res)=>{
     })
 })
 
-
 /**
  * decodifica las fotografias ingresando el id
  * 
@@ -321,6 +343,10 @@ router.get('/api/decobase64/:id', (req,res)=>{
     .catch((err)=>{
         res.json({err});
     })
+})
+
+router.get('/inf-elegidos',(req,res)=>{
+    
 })
 
 
@@ -357,7 +383,6 @@ router.post('/api/registerpay', (req, res) => {
     console.error(error)
     });
 })
-
 
 router.post('/api/registerpayPSE', (req, res) => {  
 
