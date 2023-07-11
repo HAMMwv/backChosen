@@ -11,6 +11,7 @@ const ChosenModel = require('../models/ChosenModel');
 const PayModel = require('../models/payModel');
 const ProductsModel = require('../models/ProducModel');
 const RegisterPayModel = require("../models/RegisterPayModel")
+const UserModel = require("../models/UserModel")
 const https = require('https');
 const querystring = require('querystring');
 
@@ -26,7 +27,7 @@ const registerFrom = (data,status)=>{
 
     // build the data object
     
-    var postData = querystring.stringify({
+    let postData = querystring.stringify({
         'email': data.email,
         'firstname': data.firstName,
         'lastname': data.lastName,
@@ -41,7 +42,7 @@ const registerFrom = (data,status)=>{
     });
     
     // set the post options, changing out the HUB ID and FORM GUID variables.    
-    var options = {
+    let options = {
         hostname: 'forms.hubspot.com',
         path: '/uploads/form/v2/2623910/923f8e6d-fa8d-4d22-93d7-555f4923c2f4',
         method: 'POST',
@@ -52,7 +53,7 @@ const registerFrom = (data,status)=>{
     }
     
     // set up the request    
-    var request = https.request(options, function(response){
+    let request = https.request(options, function(response){
         console.log("Status: " + response.statusCode);
         console.log("Headers: " + JSON.stringify(response.headers));
         response.setEncoding('utf8');
@@ -80,7 +81,7 @@ const registerFrom = (data,status)=>{
  const registerPreTransactionFrom = (data)=>{   
 
     // build the data object    
-    var postData = querystring.stringify({
+    let postData = querystring.stringify({
         'firstname': data.first_name,
         'lastname': data.last_name,
         'email': data.email,
@@ -100,7 +101,7 @@ const registerFrom = (data,status)=>{
     });
     
     // set the post options, changing out the HUB ID and FORM GUID variables.    
-    var options = {
+    let options = {
         hostname: 'forms.hubspot.com',
         path: '/uploads/form/v2/2623910/3b2488ec-ddd5-42b3-8e6f-c4c5327f8eae',
         method: 'POST',
@@ -111,7 +112,7 @@ const registerFrom = (data,status)=>{
     }
     
     // set up the request    
-    var request = https.request(options, function(response){
+    let request = https.request(options, function(response){
         console.log("Status: " + response.statusCode);
         console.log("Headers: " + JSON.stringify(response.headers));
         response.setEncoding('utf8');
@@ -142,7 +143,6 @@ router.post('/api/chosenRegister', (req, res) => {
             error: 'chosen is missing',
         });
     }
-    console.log(data)
     const chosen = new ChosenModel(req.body);
     chosen.save()
         .then((WriteResult) => {
@@ -192,18 +192,22 @@ router.post('/api/checkout/upload-photo-donor/:id', (req, res) => {
  */
 router.post('/api/checkout/update-payment/:id', (req, res) => {
     const idParams = req.params.id;
-    const data = req.body;
+    const data = req.body
     console.log(idParams)
+    console.log(data)
     if (!data) {
         return res.status(400).json({
             error: 'data is missing',
         });
     }
-    RegisterPayModel.find({
-        _id : idParams 
-        })
+    RegisterPayModel.updateOne({
+        'transaction.id' : idParams 
+        }, {$set :{
+            'transaction.status' : data.status,
+            'transaction.status_detail' : data.status_detail, 
+        }})
         .then((WriteResult) => {
-            console.log(WriteResult)
+            res.json(WriteResult)
         })
         .catch((err) => {
             res.json({
@@ -345,10 +349,118 @@ router.get('/api/decobase64/:id', (req,res)=>{
     })
 })
 
-router.get('/inf-elegidos',(req,res)=>{
-    
+/**
+ * Retorna los ultimos 10 registros de donantes
+ * se le debe agregar parametros de busqueda tanto como paginado o fechas
+ */
+router.get('/api/inf-elegidos',(req,res)=>{
+    const projection = {donor_photo_base64: 0, __v:0}
+    const projectionpay = {date: 0, __v:0, aIdDonor:0}
+
+    ChosenModel.find({},projection).sort({_id: -1}).limit(40)
+    .then((WriteResult)=>{
+        const dataDonors = WriteResult;
+        RegisterPayModel.find({},projectionpay)
+            .then((WriteResult)=>{
+                const payRecorded = WriteResult;
+                const inform = dataDonors.map(donor => {
+                    if(donor.payId){
+                        const payer = payRecorded.find(pay => pay._id.toString() === donor.payId);                        
+                        return {
+                            id : donor.id,
+                            phone : donor.phone.value,
+                            address_city : donor.address_city,
+                            address_street : donor.address_street,
+                            birthdate : donor.birthdate,
+                            email : donor.email,
+                            gender : donor.gender,
+                            first_name : donor.first_name,
+                            last_name : donor.last_name,
+                            referral_code : donor.referral_code,
+                            identificationNumber : donor.identificationNumber,
+                            identificationType : donor.identificationType,
+                            registrationDate : donor.date,
+                            payId : donor.payId,
+                            payment_method_id : payer.payment_method_id,
+                            card_emitter : payer.card.emitter,
+                            transaction_id : payer.transaction.id,
+                            transaction_status : payer.transaction.status,
+                            transaction_detail : payer.transaction.status_detail,
+                            transaction_user_typeDoc : payer.typeIdentification,
+                            transaction_user_document : payer.identification,
+                            transaction_amount : payer.transaction_amount,
+                        };
+                    }else{
+                        return {
+                            id : donor.id,
+                            phone : donor.phone.value,
+                            address_city : donor.address_city,
+                            address_street : donor.address_street,
+                            birthdate : donor.birthdate,
+                            email : donor.email,
+                            gender : donor.gender,
+                            first_name : donor.first_name,
+                            last_name : donor.last_name,
+                            referral_code : donor.referral_code,
+                            identificationNumber : donor.identificationNumber,
+                            identificationType : donor.identificationType,
+                            registrationDate : donor.date,
+                        };
+                    }
+                })
+                res.json(inform);
+                }                
+            )
+            .catch((err)=>{
+                    res.json(err)
+                }
+            )
+            
+            
+    })
+    .catch((err)=>{
+        res.json(err)
+    }
+    )
 })
 
+/**
+ * Retorna todos los registros de pago
+ */
+router.get('/api/inf-elegidos-totalpay',(req,res)=>{
+    RegisterPayModel.find({},projection)
+    .then((WriteResult)=>{
+        const payRegister = WriteResult;             
+        res.json(payRegister)
+    })
+    .catch((err)=>{
+        res.json(err)
+    }
+    )
+})
+
+/**
+ * Retorna un pago por el id de transaccion de Mercado pago
+ */
+ router.get('/api/checkout/mercadopago_payment/:id', (req, res) => {
+    const idParams = req.params.id;    
+    if (!req.params.id) {
+        return res.status(400).json({
+            error: 'data is missing',
+        });
+    }
+    RegisterPayModel.find({
+        'transaction.id' : idParams 
+        })
+        .then((WriteResult) => {
+            res.json(WriteResult)
+        })
+        .catch((err) => {
+            res.json({
+                err
+            });
+        })
+})
 
 /**
  * servicios de mercado pago; registra el pago.
@@ -436,6 +548,42 @@ router.get('/api/payment_metods_pse',(req ,res)=>{
     
     paymentMethod()
 })
+
+/**
+ * servicos de Autenticacion y generacion de token
+ */
+
+router.post('/api/auth/login',(req ,res)=>{
+    const auth_secure_token = "123asbc"
+    const  data = req.body
+    console.log(data)
+    return res.status(200).json({
+        error : 'error de datos'
+    })
+})
+
+/**
+ * crear un usuario valido para el ingreo al backoffices de chosen
+ */
+router.post('/api/auth/createUser',(req ,res)=>{
+    const data = req.body
+    if (!data) {
+        return res.status(400).json({
+            error: 'chosen is missing',
+        });
+    }
+    const user = new UserModel(req.body);
+    user.save()
+        .then(() => {           
+            res.json({
+               res : "usuario creado Exitosamente"
+            })
+        })
+        .catch((err) => {
+            console.log(err);
+        })
+})
+
 
 
 module.exports = router;
