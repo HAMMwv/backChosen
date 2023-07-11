@@ -556,7 +556,6 @@ router.get('/api/payment_metods_pse',(req ,res)=>{
 router.post('/api/auth/login',(req ,res)=>{
     const auth_secure_token = "123asbc"
     const  data = req.body
-    console.log(data)
     return res.status(200).json({
         error : 'error de datos'
     })
