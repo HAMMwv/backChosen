@@ -556,9 +556,28 @@ router.get('/api/payment_metods_pse',(req ,res)=>{
 router.post('/api/auth/login',(req ,res)=>{
     const auth_secure_token = "123asbc"
     const  data = req.body
-    return res.status(200).json({
-        error : 'error de datos'
+    console.log(data)
+    UserModel.find({ email : data.email })
+    .then((user)=>{
+        console.log(user)
+        if(user != [] && user[0].password === data.password){
+            res.status(200).json({
+                Msj : 'Bienvenido',
+                auth_secure_token
+            })
+        }else{
+            res.status(400).json({
+                error : 'Las credenciales no coinciden'
+            })
+        }
     })
+    .catch((e) =>{
+        res.status(400).json({
+            error : 'Usuario no encontrado'
+        })
+    })
+    
+    
 })
 
 /**
