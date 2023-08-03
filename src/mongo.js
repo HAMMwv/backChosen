@@ -1,6 +1,9 @@
 const mongoose = require('mongoose')
+
+require('dotenv').config();
+
 const { Schema, model } = mongoose;
-const connectionString = 'mongodb+srv://moncadahenry93:l4RfabdBL4Y6AZ9Y@cluster0.dlb1osd.mongodb.net/chosen?retryWrites=true&w=majority'
+const connectionString = process.env.URL_DB_MONGO
 
 mongoose.connect(connectionString)
     .then(()=>{

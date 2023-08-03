@@ -2,9 +2,8 @@ const {
     Router
 } = require('express');
 const router = Router();
-
-
-
+require('dotenv').config();
+const simmaUtils = require('../utils/simmaUtils');
 
 const mercadopago = require('mercadopago');
 const ChosenModel = require('../models/ChosenModel');
@@ -12,10 +11,11 @@ const PayModel = require('../models/payModel');
 const ProductsModel = require('../models/ProducModel');
 const RegisterPayModel = require("../models/RegisterPayModel")
 const UserModel = require("../models/UserModel")
+const SimmaUtils = require("../utils/simmaUtils")
 const https = require('https');
 const querystring = require('querystring');
 
-mercadopago.configurations.setAccessToken("APP_USR-6786679189352218-092210-8c759ee3eabcbf2302092e88f0feeffe-265854976");
+mercadopago.configurations.setAccessToken(process.env.ACCESS_TOKEN_MELI_PROD);
 
 
 /**
@@ -341,11 +341,23 @@ router.get('/api/decobase64/:id', (req,res)=>{
     const idParams = req.params.id;
     ChosenModel.find({_id: idParams})
     .then((chose)=>{
-        console.log('llego una pet')
-        res.json(chose[0].donor_photo_base64);
-    })
+        if(chose[0] && chose[0].donor_photo_base64){
+            res.json({
+                image : chose[0].donor_photo_base64,
+                name :  chose[0].first_name,
+            })
+        }else if(chose[0]){
+            res.json({
+                msj: "El donante no dejo foto"
+            })           
+        }else{
+            res.status(400).json({
+                msj: "Id no encontrado"
+            })  
+        }
+        })
     .catch((err)=>{
-        res.json({err});
+        res.json({msj: "Id no encontrado"});
     })
 })
 
@@ -553,8 +565,10 @@ router.get('/api/payment_metods_pse',(req ,res)=>{
  * servicos de Autenticacion y generacion de token
  */
 
-router.post('/api/auth/login',(req ,res)=>{
-    const auth_secure_token = "123asbc"
+router.post('/api/auth/login',async (req ,res)=>{
+    const UserSimma = req.body.UserName? req.body.UserName : 'Wilmar';
+    const hash = simmaUtils.generateHash(UserSimma);
+    const auth_secure_token = await simmaUtils.generateToken(UserSimma,hash);
     const  data = req.body
     console.log(data)
     UserModel.find({ email : data.email })
@@ -563,7 +577,7 @@ router.post('/api/auth/login',(req ,res)=>{
         if(user != [] && user[0].password === data.password){
             res.status(200).json({
                 Msj : 'Bienvenido',
-                auth_secure_token
+                auth_secure_token : auth_secure_token.data
             })
         }else{
             res.status(400).json({
